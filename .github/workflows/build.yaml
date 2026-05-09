@@ -52,6 +52,7 @@ jobs:
         run: bun install # change this to npm, pnpm or bun depending on which one you use.
       - uses: tauri-apps/tauri-action@dev
         env:
+          GITHUB_TOKEN: ${{ secrets.SAMT_APP_PUB_REPO_PAT }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
