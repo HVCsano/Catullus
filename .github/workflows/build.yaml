@@ -25,7 +25,7 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # - name: setup node
       #   uses: actions/setup-node@v4
@@ -58,7 +58,6 @@ jobs:
           tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'App v__VERSION__'
           releaseBody: ${{ github.event.head_commit.message }}
-          releaseCommitish: 'de1f1ae2979e54defc7303f07aa964c4f6b04e67'
           owner: "HVCsano"
           repo: "Catullus"
           prerelease: false
