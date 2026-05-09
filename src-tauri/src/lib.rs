@@ -1,14 +1,84 @@
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    AppHandle, Emitter, Listener, Manager, PhysicalSize, Size,
+};
+
+mod util;
+
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+async fn update_done(app: AppHandle) {
+    app.emit("setloadertext", "Konfiguráció betöltése").unwrap();
+    let main = tauri::WebviewWindowBuilder::from_config(
+        &app,
+        &app.config().app.windows.get(2).unwrap().clone(),
+    )
+    .unwrap();
+    let config = util::config::load_config();
+    if config.is_none() {
+        let loader = app.get_webview_window("loader").unwrap();
+        app.emit("setloadertext", "Konfiguráció nem létezik")
+            .unwrap();
+        let main = main.build().unwrap();
+        let main_clone = main.clone();
+        main.once("panel", move |_| {
+            main_clone.emit("changepanel", "main/noconfig").unwrap();
+        });
+        loader.close().unwrap();
+        main.show().unwrap();
+        main.set_focus().unwrap();
+        return;
+    }
+    app.emit("setloadertext", "Felület előkészítése").unwrap();
+    let main = main.build().unwrap();
+    let main_clone = main.clone();
+    main.once("panel", move |_| {
+        main_clone.emit("changepanel", "main").unwrap();
+    });
+    let loader = app.get_webview_window("loader").unwrap();
+    loader.close().unwrap();
+    main.show().unwrap();
+    main.set_focus().unwrap();
+    main.set_size(Size::Physical(PhysicalSize {
+        height: 720,
+        width: 1280,
+    }))
+    .unwrap();
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
+        .setup(|app| {
+            util::config::setup_folders();
+            let quit_i = MenuItem::with_id(app, "quit", "Kilépés", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&quit_i])?;
+            TrayIconBuilder::new()
+                .menu(&menu)
+                .title("Catullus")
+                .tooltip("Catullus")
+                .icon(app.default_window_icon().unwrap().clone())
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {
+                        println!("menu item {:?} not handled", event.id);
+                    }
+                })
+                .build(app)?;
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![update_done, stop_app])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[tauri::command]
+async fn stop_app(app: AppHandle) {
+    app.exit(0);
 }
