@@ -11,6 +11,7 @@
         "@tauri-apps/plugin-process": "~2",
         "@tauri-apps/plugin-updater": "~2",
         "tailwindcss": "^4.3.0",
+        "tailwindcss-animated": "^2.1.0",
       },
       "devDependencies": {
         "@sveltejs/adapter-static": "^3.0.6",
@@ -318,6 +319,8 @@
     "svelte-check": ["svelte-check@4.4.8", "", { "dependencies": { "@jridgewell/trace-mapping": "^0.3.25", "chokidar": "^4.0.1", "fdir": "^6.2.0", "picocolors": "^1.0.0", "sade": "^1.7.4" }, "peerDependencies": { "svelte": "^4.0.0 || ^5.0.0-next.0", "typescript": ">=5.0.0" }, "bin": { "svelte-check": "bin/svelte-check" } }, "sha512-67adfgBox5eNSNIvIIwgFizKGdcRrGpiMoNO2obHcYuLz7iTa8Xgm/NGU3ntMFnNm8K1grFOIG6HhMLX/vcN8w=="],
 
     "tailwindcss": ["tailwindcss@4.3.0", "", {}, "sha512-y6nxMGB1nMW9R6k96e5gdIFzcfL/gTJRNaqGes1YvkLnPVXzWgbqFF2yLC0T8G774n24cx3Pe8XrKoniCOAH+Q=="],
+
+    "tailwindcss-animated": ["tailwindcss-animated@2.1.0", "", { "peerDependencies": { "tailwindcss": ">=3.1.0 || >=4.0.0" } }, "sha512-KUTVvcH2YQz0W8CT6QT3zz3UdqPmvLAja/KIDqY2lmvmurKPy3g+amIWenWjEaqoo3mjycuvGhYWFuegnSsCAQ=="],
 
     "tapable": ["tapable@2.3.3", "", {}, "sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A=="],
 

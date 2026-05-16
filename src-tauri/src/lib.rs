@@ -11,7 +11,7 @@ async fn update_done(app: AppHandle) {
     app.emit("setloadertext", "Konfiguráció betöltése").unwrap();
     let main = tauri::WebviewWindowBuilder::from_config(
         &app,
-        &app.config().app.windows.get(2).unwrap().clone(),
+        &app.config().app.windows.get(1).unwrap().clone(),
     )
     .unwrap();
     let config = util::config::load_config();
