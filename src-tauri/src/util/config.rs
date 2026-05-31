@@ -1,12 +1,14 @@
 use std::{
     env::consts::OS,
-    fs::{create_dir, File},
+    fs::{self, create_dir, File},
     io::Write,
     path::Path,
 };
 
 use homedir::my_home;
 use serde::{Deserialize, Serialize};
+use tauri::{AppHandle, Emitter};
+use tauri_plugin_dialog::DialogExt;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -31,6 +33,16 @@ pub fn setup_folders() {
     if !main_folder.exists() {
         create_dir(main_folder).unwrap();
     }
+    let cache_dir = format!("{}/cache", pat);
+    let cache_folder = Path::new(&cache_dir);
+    if !cache_folder.exists() {
+        create_dir(cache_folder).unwrap();
+    }
+    let ffmpeg_dir = format!("{}/ffmpeg", pat);
+    let ffmpeg_folder = Path::new(&ffmpeg_dir);
+    if !ffmpeg_folder.exists() {
+        create_dir(ffmpeg_folder).unwrap();
+    }
 }
 
 pub fn load_config() -> Option<Config> {
@@ -44,7 +56,11 @@ pub fn load_config() -> Option<Config> {
     if real_config.is_none() {
         return None;
     }
-    return Some(real_config.unwrap());
+    let real_config = real_config.unwrap();
+    if fs::read_dir(&real_config.game_dir).is_err() {
+        return None;
+    }
+    return Some(real_config);
 }
 
 pub fn save_config(config: Config) {
@@ -52,4 +68,26 @@ pub fn save_config(config: Config) {
     let config_str = serde_json::to_string_pretty(&config).unwrap();
     let mut file = File::create(format!("{}/config.json", pat)).unwrap();
     file.write(config_str.as_bytes()).unwrap();
+}
+
+#[tauri::command]
+pub async fn set_game_dir(app: AppHandle) {
+    app.dialog().file().pick_folder(move |folder| {
+        if folder.is_some() {
+            app.emit("selectedGameDir", folder.unwrap()).unwrap();
+        }
+    });
+}
+
+#[tauri::command]
+pub async fn save_game_dir(dir: String) {
+    let config = Config {
+        game_dir: dir.clone(),
+    };
+    save_config(config);
+}
+
+#[tauri::command]
+pub async fn done_setup(app: AppHandle) {
+    app.restart();
 }

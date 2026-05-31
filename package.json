@@ -1,6 +1,11 @@
 {
   "name": "catullus",
-  "version": "0.1.0",
+  "author": {
+    "name": "HVCsano",
+    "email": "me@csano.hu",
+    "url": "https://csano.hu"
+  },
+  "version": "0.1.1",
   "description": "",
   "type": "module",
   "scripts": {
@@ -15,9 +20,12 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "~2",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-process": "~2",
     "@tauri-apps/plugin-updater": "~2",
+    "prettier-plugin-svelte": "^4.0.1",
+    "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4.3.0",
     "tailwindcss-animated": "^2.1.0"
   },

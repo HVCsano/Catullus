@@ -1,7 +1,12 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Emitter, Listener, Manager, PhysicalSize, Size,
+    AppHandle, Emitter, Listener, Manager, PhysicalSize, Size, Url,
+};
+
+use crate::util::{
+    ffmpeg::{download_ffmpeg, setup_ffmpeg},
+    files::load_files_file,
 };
 
 mod util;
@@ -22,12 +27,31 @@ async fn update_done(app: AppHandle) {
         let main = main.build().unwrap();
         let main_clone = main.clone();
         main.once("panel", move |_| {
-            main_clone.emit("changepanel", "main/noconfig").unwrap();
+            main_clone.emit("changepanel", "setup").unwrap();
         });
         loader.close().unwrap();
         main.show().unwrap();
         main.set_focus().unwrap();
         return;
+    }
+    app.emit("setloadertext", "ffmpeg letöltése").unwrap();
+    let ffmpeg_dl = download_ffmpeg().await;
+    if ffmpeg_dl.is_err() {
+        app.emit("setloadertext", ffmpeg_dl.unwrap_err()).unwrap();
+        return;
+    }
+    if ffmpeg_dl.unwrap() {
+        app.emit("setloadertext", "ffmpeg előkészítése").unwrap();
+        let fset = setup_ffmpeg().await;
+
+        if fset.is_err() {
+            app.emit(
+                "setloadertext",
+                &format!("ffmpeg hiba: {}", fset.unwrap_err().to_string()),
+            )
+            .unwrap();
+            return;
+        }
     }
     app.emit("setloadertext", "Felület előkészítése").unwrap();
     let main = main.build().unwrap();
@@ -49,6 +73,7 @@ async fn update_done(app: AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
@@ -73,7 +98,14 @@ pub fn run() {
                 .build(app)?;
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![update_done, stop_app])
+        .invoke_handler(tauri::generate_handler![
+            update_done,
+            stop_app,
+            util::config::set_game_dir,
+            util::config::save_game_dir,
+            util::config::done_setup,
+            util::files::load_files_file
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
