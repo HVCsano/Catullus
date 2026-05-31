@@ -1,13 +1,10 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    AppHandle, Emitter, Listener, Manager, PhysicalSize, Size, Url,
+    AppHandle, Emitter, Listener, Manager, PhysicalSize, Size,
 };
 
-use crate::util::{
-    ffmpeg::{download_ffmpeg, setup_ffmpeg},
-    files::load_files_file,
-};
+use crate::util::ffmpeg::{download_ffmpeg, setup_ffmpeg};
 
 mod util;
 
