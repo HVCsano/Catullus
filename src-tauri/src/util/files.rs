@@ -3,11 +3,14 @@ use std::{
     fs::{create_dir, remove_file, File},
     io::{self, Write},
     path::Path,
+    sync::Mutex,
 };
 
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use tauri::{AppHandle, Emitter, Listener};
+
+use rayon::prelude::*;
 
 use crate::util::config::{get_conf_path, load_config};
 
@@ -107,9 +110,11 @@ pub async fn generate_files_file(app: AppHandle) {
 
     let accepted_files = vec!["dds", "wav", "mp3", "png"];
 
+    let mut all_files = Vec::new();
+
     for (i, fold) in folders.iter().enumerate() {
         app.emit("setprogress-desc", "Generálás...").unwrap();
-        app.emit("setprogress-undesc", "Ez nagyon sokáig is eltarthat")
+        app.emit("setprogress-undesc", "Ez sokáig is eltarthat")
             .unwrap();
         app.emit("setprogress-state", (i + 1) * 100 / foldercount)
             .unwrap();
@@ -121,34 +126,34 @@ pub async fn generate_files_file(app: AppHandle) {
                 let entry = entry.unwrap();
                 if entry.file_type().unwrap().is_dir() {
                     folders.push(Path::new(&entry.path()).read_dir().unwrap());
-                    continue;
-                }
-
-                if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
+                } else if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
                     if accepted_files.contains(&ext) {
-                        files.count += 1;
-
-                        let mut file = File::open(entry.path()).unwrap();
-                        let mut hasher = sha2::Sha256::new();
-                        io::copy(&mut file, &mut hasher).unwrap();
-                        let hash = format!("{:x}", hasher.finalize());
-
-                        files.files.insert(
-                            String::from(
-                                entry
-                                    .path()
-                                    .strip_prefix(game_dir)
-                                    .unwrap()
-                                    .to_str()
-                                    .unwrap(),
-                            ),
-                            (hash, None),
-                        );
-                    };
+                        all_files.push(entry.path());
+                    }
                 }
             }
         }
     }
+
+    let file_count = Mutex::new(0);
+    let results: HashMap<String, (String, Option<String>)> = all_files
+        .par_iter()
+        .filter_map(|path| {
+            let mut file = File::open(path).ok()?;
+            let mut hasher = sha2::Sha256::new();
+            io::copy(&mut file, &mut hasher).ok()?;
+            let hash = format!("{:x}", hasher.finalize());
+
+            let relative = path.strip_prefix(game_dir).ok()?.to_str()?.to_string();
+
+            let mut count = file_count.lock().unwrap();
+            *count += 1;
+
+            Some((relative, (hash, None)))
+        })
+        .collect();
+    files.count = results.len() as i64;
+    files.files = results;
     let data_pretty = serde_json::to_string_pretty(&files).unwrap();
     let mut file = File::create(listfile).unwrap();
     file.write(data_pretty.as_bytes()).unwrap();
