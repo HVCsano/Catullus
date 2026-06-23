@@ -13,6 +13,7 @@ use tauri_plugin_dialog::DialogExt;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     pub game_dir: String,
+    pub show_help: bool,
 }
 
 pub fn get_conf_path() -> String {
@@ -37,6 +38,11 @@ pub fn setup_folders() {
     let cache_folder = Path::new(&cache_dir);
     if !cache_folder.exists() {
         create_dir(cache_folder).unwrap();
+    }
+    let templates_dir = format!("{}/templates", pat);
+    let templates_folder = Path::new(&templates_dir);
+    if !templates_folder.exists() {
+        create_dir(templates_folder).unwrap();
     }
     let ffmpeg_dir = format!("{}/ffmpeg", pat);
     let ffmpeg_folder = Path::new(&ffmpeg_dir);
@@ -80,9 +86,17 @@ pub async fn set_game_dir(app: AppHandle) {
 }
 
 #[tauri::command]
+pub async fn disable_help(_app: AppHandle) {
+    let mut conf = load_config().unwrap();
+    conf.show_help = false;
+    save_config(conf);
+}
+
+#[tauri::command]
 pub async fn save_game_dir(dir: String) {
     let config = Config {
         game_dir: dir.clone(),
+        show_help: true,
     };
     save_config(config);
 }

@@ -101,7 +101,9 @@ pub fn run() {
             util::config::set_game_dir,
             util::config::save_game_dir,
             util::config::done_setup,
-            util::files::load_files_file
+            util::config::disable_help,
+            util::files::load_files_file,
+            util::files::generate_files_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

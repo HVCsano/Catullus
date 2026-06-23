@@ -1,5 +1,10 @@
 <script lang="ts">
+	import { invoke } from '@tauri-apps/api/core';
 	import type { PageData } from './$types';
+
+	async function generate_files_file() {
+		await invoke('generate_files_file');
+	}
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -17,6 +22,7 @@
 		ide kerülsz ebben az esetben.
 	</p>
 	<button
+		onclick={async () => await generate_files_file()}
 		class="bg-orange-400 animate-fade-up animate-delay-300 text-3xl font-tekt mt-8 font-bold px-6 py-2 rounded-xl cursor-pointer hover:bg-orange-700 duration-200"
 		>Fájlok újragenerálása</button
 	>

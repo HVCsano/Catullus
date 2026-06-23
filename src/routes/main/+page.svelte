@@ -7,7 +7,7 @@
 	let { data }: { data: PageData } = $props();
 
 	onMount(async () => {
-		let files = await invoke<string | null>('load_files_file');
+		let files = await invoke<string | number>('load_files_file');
 		if (files === null) {
 			await goto('/main/mismatch');
 		}
